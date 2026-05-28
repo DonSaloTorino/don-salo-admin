@@ -195,6 +195,14 @@
   /* ===== ORDERS ===== */
   .order-status-select { padding: 5px 10px; border: 1px solid var(--borde); border-radius: 7px; font-size: 12px; cursor: pointer; background: white; }
 
+  /* ===== STOCK ===== */
+  .stock-ctrl { display:flex; align-items:center; gap:6px; justify-content:center; }
+  .stock-btn { width:26px; height:26px; border-radius:6px; border:1.5px solid var(--borde); background:white; cursor:pointer; font-size:16px; font-weight:600; display:flex; align-items:center; justify-content:center; transition:all .15s; line-height:1; }
+  .stock-btn:hover { border-color:var(--verde); color:var(--verde); }
+  .stock-num { font-weight:700; font-size:14px; min-width:28px; text-align:center; color:var(--verde); }
+  .stock-num.low { color:#d97706; }
+  .stock-num.zero { color:var(--rojo); }
+  .stock-na { font-size:11px; color:var(--texto-suave); }
   /* ===== WEB VISIBILITY TOGGLE ===== */
   .toggle-web { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
   .toggle-web input { opacity: 0; width: 0; height: 0; position: absolute; }
@@ -334,6 +342,9 @@
           <div class="stat-sub">recibidos</div>
         </div>
       </div>
+
+      <!-- STOCK ALERTS -->
+      <div id="stock-alerts" style="display:none;margin-bottom:20px;"></div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
           <div style="font-weight:600;font-size:15px;">Últimos pedidos</div>
@@ -370,6 +381,7 @@
                 <th>Categoría</th>
                 <th>Precio</th>
                 <th>Stock / Opciones</th>
+                <th style="text-align:center;">📦 Stock</th>
                 <th>Estado</th>
                 <th title="Visible en la tienda web">🌐 Web</th>
                 <th title="Destacado en home">⭐ Evidenza</th>
@@ -453,25 +465,28 @@
           </div>
           <span class="badge badge-verde">Attivo</span>
         </div>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
           <thead>
-            <tr style="background:var(--crema);">
-              <th style="padding:10px 12px;text-align:left;border-bottom:1px solid var(--borde);">Fascia di peso</th>
-              <th style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--borde);">🏠 Domicilio (Italia)</th>
-              <th style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--borde);">📍 FermoPoint</th>
-              <th style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--borde);">🏝 Calabria/Sic/Sard</th>
+            <tr style="background:var(--verde);color:white;">
+              <th style="padding:10px 12px;text-align:left;border-radius:8px 0 0 0;" rowspan="2">Fascia di peso</th>
+              <th style="padding:6px 12px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);" colspan="3">🏠 Domicilio (Italia)</th>
+              <th style="padding:6px 12px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);" colspan="3">📍 FermoPoint</th>
+            </tr>
+            <tr style="background:var(--verde-medio);color:white;font-size:10px;">
+              <th style="padding:6px 10px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">Netto</th>
+              <th style="padding:6px 10px;text-align:center;">IVA 22%</th>
+              <th style="padding:6px 10px;text-align:center;font-weight:700;">Totale ✓</th>
+              <th style="padding:6px 10px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">Netto</th>
+              <th style="padding:6px 10px;text-align:center;">IVA 22%</th>
+              <th style="padding:6px 10px;text-align:center;font-weight:700;">Totale ✓</th>
             </tr>
           </thead>
-          <tbody>
-            <tr><td style="padding:9px 12px;border-bottom:1px solid var(--crema-oscuro);">0 – 1 kg</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 6,39</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 5,39</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 7,89</td></tr>
-            <tr style="background:var(--crema);"><td style="padding:9px 12px;border-bottom:1px solid var(--crema-oscuro);">1,1 – 3 kg</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 6,59</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 5,79</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 8,19</td></tr>
-            <tr><td style="padding:9px 12px;border-bottom:1px solid var(--crema-oscuro);">3,1 – 5 kg</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 7,39</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 6,39</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 8,89</td></tr>
-            <tr style="background:var(--crema);"><td style="padding:9px 12px;border-bottom:1px solid var(--crema-oscuro);">5,1 – 10 kg</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 9,29</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 8,29</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 11,29</td></tr>
-            <tr><td style="padding:9px 12px;border-bottom:1px solid var(--crema-oscuro);">10,1 – 20 kg</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 12,59</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 11,59</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 14,99</td></tr>
-            <tr style="background:var(--crema);"><td style="padding:9px 12px;">20,1 – 30 kg</td><td style="text-align:center;padding:9px;">€ 16,99</td><td style="text-align:center;padding:9px;">N/D (max 20kg)</td><td style="text-align:center;padding:9px;">€ 19,99</td></tr>
-          </tbody>
+          <tbody id="brt-table-body"></tbody>
         </table>
-        <div style="margin-top:12px;padding:10px 14px;background:#fef9c3;border-radius:8px;font-size:12px;color:#854d0e;">
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:center;font-size:12px;color:var(--texto-suave);">
+          <span>✓ <strong>Il cliente vede solo la colonna "Totale"</strong> (Netto + IVA 22%)</span>
+        </div>
+        <div style="margin-top:8px;padding:10px 14px;background:#fef9c3;border-radius:8px;font-size:12px;color:#854d0e;">
           ⚠️ Questi prezzi si applicano ai prodotti con <strong>Partner logístico = BRT Standard</strong>. Il calcolo è automatico in base al peso totale del carrello.
         </div>
       </div>
@@ -611,6 +626,20 @@
       </select>
     </div>
 
+    <!-- STOCK -->
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">📦 Stock disponibile</label>
+        <input type="number" class="form-input" id="prod-stock" placeholder="Es: 10" min="0" step="1">
+        <div class="form-hint">Lascia vuoto = non gestito. A 0 → "Non disponibile"</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">⚠️ Stock minimo (alert)</label>
+        <input type="number" class="form-input" id="prod-stock-min" placeholder="Es: 3" min="1" step="1" value="3">
+        <div class="form-hint">Alert nel dashboard quando lo stock scende sotto questo valore</div>
+      </div>
+    </div>
+
     <!-- PESO Y LOGISTICA -->
     <div class="form-row">
       <div class="form-group">
@@ -653,7 +682,66 @@
   </div>
 </div>
 
-<!-- MODAL CATEGORIA -->
+<!-- MODAL NUOVA TABELLA SPEDIZIONE -->
+<div class="modal-overlay" id="modal-spedizione">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-ship-title">Nuova tabella spedizione</div>
+      <button class="modal-close" onclick="closeShipModal()">✕</button>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nome partner (interno) *</label>
+        <input type="text" class="form-input" id="ship-nome" placeholder="Es: STEF Refrigerato, BRT Express...">
+        <div class="form-hint">Solo visibile a te nel pannello admin</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Chiave partner *</label>
+        <input type="text" class="form-input" id="ship-key" placeholder="Es: stef, brt_express..." style="font-family:var(--font-mono);">
+        <div class="form-hint">Deve corrispondere al "Partner logístico" del prodotto</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nome visibile al cliente</label>
+      <input type="text" class="form-input" id="ship-nome-cliente" placeholder="Es: Spedizione Refrigerata, Consegna Express...">
+      <div class="form-hint">Questo è quello che vedrà il cliente (opzionale)</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note interne</label>
+      <input type="text" class="form-input" id="ship-note" placeholder="Es: Solo domicilio, max 20kg...">
+    </div>
+
+    <!-- FASCE DI PESO -->
+    <div class="form-group">
+      <label class="form-label">Fasce di peso e prezzi</label>
+      <div style="background:var(--crema);border-radius:10px;padding:12px;margin-bottom:8px;">
+        <table style="width:100%;font-size:12px;border-collapse:collapse;" id="fasce-table">
+          <thead>
+            <tr style="color:var(--texto-suave);text-transform:uppercase;font-size:10px;letter-spacing:1px;">
+              <th style="padding:4px 6px;text-align:left;">Peso min (kg)</th>
+              <th style="padding:4px 6px;text-align:left;">Peso max (kg)</th>
+              <th style="padding:4px 6px;text-align:left;">€ Domicilio</th>
+              <th style="padding:4px 6px;text-align:left;">€ FermoPoint</th>
+              <th style="padding:4px 6px;"></th>
+            </tr>
+          </thead>
+          <tbody id="fasce-tbody"></tbody>
+        </table>
+        <button class="btn btn-secondary btn-sm" style="margin-top:8px;width:100%;" onclick="addFascia()">+ Aggiungi fascia</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn btn-secondary" onclick="closeShipModal()">Annulla</button>
+      <button class="btn btn-primary" onclick="saveShipTable()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+        Salva tabella
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-categoria">
   <div class="modal" style="max-width:420px;">
     <div class="modal-header">
@@ -768,7 +856,7 @@ window.doLogout = function() { auth.signOut(); };
 
 // ===== LOAD ALL =====
 async function loadAll() {
-  await Promise.all([loadCategorias(), loadProductos(), loadPedidos()]);
+  await Promise.all([loadCategorias(), loadProductos(), loadPedidos(), loadTariffe()]);
   updateStats();
 }
 
@@ -889,6 +977,9 @@ function renderProductos(filter) {
     const kgStr = p.kgOpciones && p.kgOpciones.length ? p.kgOpciones.slice(0,3).join(', ') + (p.kgOpciones.length>3?'...':'') : '—';
     const pesoStr = p.peso ? `${parseFloat(p.peso).toFixed(3)} kg` : '—';
     const partnerIcon = p.partnerLogistico === 'refrigerato' ? '🧊' : p.partnerLogistico === 'ritiro_solo' ? '🏪' : '🚚';
+    const stockMin = p.stockMinimo || 3;
+    const stockReserv = p.stockReservado || 0;
+    const stockDisp = p.stock !== null && p.stock !== undefined ? Math.max(0, p.stock - stockReserv) : null;
     const estadoBadge = p.estado === 'activo' ? '<span class="badge badge-verde">Activo</span>' : p.estado === 'agotado' ? '<span class="badge badge-rojo">Agotado</span>' : '<span class="badge badge-gris">Inactivo</span>';
     const imgEl = p.imagen ? `<img src="${p.imagen}" class="prod-img" onerror="this.style.display='none'">` : `<div class="prod-img-placeholder">${cat?.emoji||'📦'}</div>`;
     return `<tr>
@@ -897,6 +988,19 @@ function renderProductos(filter) {
       <td style="font-weight:500">${precioStr}</td>
       <td style="font-size:12px;color:var(--texto-medio)">${kgStr}${pesoStr !== '—' ? `<div style="font-size:11px;color:var(--texto-suave);">${partnerIcon} ${pesoStr}</div>` : ''}</td>
       <td>${estadoBadge}</td>
+      <td>
+        ${stockDisp === null
+          ? '<div class="stock-na">—</div>'
+          : `<div class="stock-ctrl">
+              <button class="stock-btn" onclick="event.stopPropagation();ajustarStock('${p.id}',-1)" title="Quitar 1">−</button>
+              <div style="text-align:center;">
+                <span class="stock-num ${stockDisp === 0 ? 'zero' : stockDisp <= stockMin ? 'low' : ''}">${stockDisp}</span>
+                ${stockReserv > 0 ? `<div style="font-size:10px;color:#d97706;font-weight:600;">🔒 ${stockReserv} riservati</div>` : ''}
+              </div>
+              <button class="stock-btn" onclick="event.stopPropagation();ajustarStock('${p.id}',1)" title="Agregar 1">+</button>
+            </div>`
+        }
+      </td>
       <td>
         <label class="toggle-web" title="${p.visibleEnWeb === false ? 'Oculto en web' : 'Visible en web'}">
           <input type="checkbox" ${p.visibleEnWeb === false ? '' : 'checked'}
@@ -934,6 +1038,8 @@ window.openProductModal = function() {
   document.getElementById('prod-precio').value = '';
   document.getElementById('prod-descripcion').value = '';
   document.getElementById('prod-estado').value = 'activo';
+  document.getElementById('prod-stock').value = '';
+  document.getElementById('prod-stock-min').value = '3';
   document.getElementById('prod-peso').value = '';
   document.getElementById('prod-partner').value = 'brt';
   document.getElementById('prod-evidenza').checked = false;
@@ -962,6 +1068,8 @@ window.editProduct = function(id) {
   document.getElementById('prod-precio').value = p.precio || '';
   document.getElementById('prod-descripcion').value = p.descripcion || '';
   document.getElementById('prod-estado').value = p.estado || 'activo';
+  document.getElementById('prod-stock').value = p.stock !== undefined && p.stock !== null ? p.stock : '';
+  document.getElementById('prod-stock-min').value = p.stockMinimo !== undefined ? p.stockMinimo : 3;
   document.getElementById('prod-peso').value = p.peso || '';
   document.getElementById('prod-partner').value = p.partnerLogistico || 'brt';
   document.getElementById('prod-evidenza').checked = p.inEvidenza === true;
@@ -1136,6 +1244,8 @@ window.saveProduct = async function() {
     estado: document.getElementById('prod-estado').value,
     visibleEnWeb: true,
     inEvidenza: document.getElementById('prod-evidenza').checked,
+    stock: document.getElementById('prod-stock').value !== '' ? parseInt(document.getElementById('prod-stock').value) : null,
+    stockMinimo: parseInt(document.getElementById('prod-stock-min').value) || 3,
     peso: parseFloat(document.getElementById('prod-peso').value) || 0,
     partnerLogistico: document.getElementById('prod-partner').value || 'brt',
     imagen: uploadedImageUrl,
@@ -1157,7 +1267,36 @@ window.saveProduct = async function() {
   finally { btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Guardar producto'; }
 };
 
-window.toggleVisibilidad = async function(id, visible) {
+window.ajustarStock = async function(id, delta) {
+  const p = productos.find(x => x.id === id);
+  if (!p) return;
+  const currentStock = p.stock !== null && p.stock !== undefined ? p.stock : 0;
+  const newStock = Math.max(0, currentStock + delta);
+  const stockMin = p.stockMinimo || 3;
+  const stockReserv = p.stockReservado || 0;
+  const newDisp = Math.max(0, newStock - stockReserv);
+  try {
+    await db.collection('productos').doc(id).update({
+      stock: newStock,
+      ...(newStock === 0 && p.estado === 'activo' ? { estado: 'agotado' } : {}),
+      ...(newStock > 0 && p.estado === 'agotado' ? { estado: 'activo' } : {}),
+      updatedAt: firebase.firestore.Timestamp.now()
+    });
+    p.stock = newStock;
+    if (newStock === 0 && p.estado === 'activo') p.estado = 'agotado';
+    if (newStock > 0 && p.estado === 'agotado') p.estado = 'activo';
+    renderProductos(currentCatFilter);
+    const msg = newStock === 0
+      ? `⚠️ ${p.nombre} — Stock a ZERO → Non disponibile`
+      : newDisp <= stockMin
+      ? `⚠️ Stock basso: ${p.nombre} → ${newDisp} disponibili (min: ${stockMin})`
+      : `Stock: ${p.nombre} → ${newDisp} disponibili`;
+    showToast(msg, newStock === 0 || newDisp <= stockMin);
+    updateStats();
+  } catch(e) { showToast('Errore aggiornamento stock', true); }
+};
+
+
   try {
     await db.collection('productos').doc(id).update({ visibleEnWeb: visible, updatedAt: firebase.firestore.Timestamp.now() });
     showToast(visible ? '✅ Visible en tienda' : '🙈 Oculto de la tienda');
@@ -1258,12 +1397,48 @@ function renderDashboardPedidos() {
 
 window.updatePedidoEstado = async function(id, estado) {
   try {
+    const pedido = pedidos.find(p => p.id === id);
+    const oldEstado = pedido?.estado;
     await db.collection('pedidos').doc(id).update({ estado, updatedAt: firebase.firestore.Timestamp.now() });
-    showToast('Estado actualizado ✓');
+
+    if (pedido && pedido.items) {
+      // CONFIRM → deduct real stock + release reservation
+      if ((estado === 'listo' || estado === 'entregado') && oldEstado !== 'listo' && oldEstado !== 'entregado') {
+        for (const item of pedido.items) {
+          const prodDoc = productos.find(x => x.nombre === item.nombre);
+          if (prodDoc && prodDoc.stock !== null && prodDoc.stock !== undefined) {
+            const newStock = Math.max(0, prodDoc.stock - item.cantidad);
+            const newReserv = Math.max(0, (prodDoc.stockReservado || 0) - item.cantidad);
+            await db.collection('productos').doc(prodDoc.id).update({ stock: newStock, stockReservado: newReserv, ...(newStock===0?{estado:'agotado'}:{}), updatedAt: firebase.firestore.Timestamp.now() }).catch(()=>{});
+            prodDoc.stock = newStock; prodDoc.stockReservado = newReserv;
+          }
+        }
+        showToast('✅ Confermato — stock scalato dal magazzino');
+        renderProductos(currentCatFilter);
+        updateStats();
+      }
+      // CANCEL → release reservation only, restore availability
+      else if (estado === 'cancelado' && oldEstado !== 'cancelado') {
+        for (const item of pedido.items) {
+          const prodDoc = productos.find(x => x.nombre === item.nombre);
+          if (prodDoc && (prodDoc.stockReservado || 0) > 0) {
+            const newReserv = Math.max(0, (prodDoc.stockReservado || 0) - item.cantidad);
+            await db.collection('productos').doc(prodDoc.id).update({ stockReservado: newReserv, updatedAt: firebase.firestore.Timestamp.now() }).catch(()=>{});
+            prodDoc.stockReservado = newReserv;
+          }
+        }
+        showToast('Annullato — riserva rilasciata');
+        renderProductos(currentCatFilter);
+      } else {
+        showToast('Stato aggiornato ✓');
+      }
+    } else {
+      showToast('Stato aggiornato ✓');
+    }
     const idx = pedidos.findIndex(p => p.id === id);
     if (idx >= 0) pedidos[idx].estado = estado;
     updateStats();
-  } catch(e) { showToast('Error al actualizar', true); }
+  } catch(e) { showToast('Errore aggiornamento', true); }
 };
 
 window.verPedido = function(id) {
@@ -1308,7 +1483,184 @@ window.verPedido = function(id) {
   document.getElementById('modal-pedido').classList.add('open');
 };
 
-// ===== STATS =====
+// ===== SPEDIZIONI =====
+const IVA_RATE = 0.22;
+const BRT_NETTO = {
+  home:  [{label:'0 – 1 kg',netto:6.39},{label:'1,1 – 3 kg',netto:6.59},{label:'3,1 – 5 kg',netto:7.39},{label:'5,1 – 10 kg',netto:9.29},{label:'10,1 – 20 kg',netto:12.59},{label:'20,1 – 30 kg',netto:16.99}],
+  fermo: [{label:'0 – 1 kg',netto:5.39},{label:'1,1 – 3 kg',netto:5.79},{label:'3,1 – 5 kg',netto:6.39},{label:'5,1 – 10 kg',netto:8.29},{label:'10,1 – 20 kg',netto:11.59},{label:'20,1 – 30 kg',netto:null}],
+};
+
+function renderBRTTable() {
+  const tbody = document.getElementById('brt-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = BRT_NETTO.home.map((h, i) => {
+    const f = BRT_NETTO.fermo[i];
+    const hIva = Math.round(h.netto * IVA_RATE * 100) / 100;
+    const hTot = Math.round((h.netto + hIva) * 100) / 100;
+    const fNetto = f?.netto;
+    const fIva = fNetto ? Math.round(fNetto * IVA_RATE * 100) / 100 : null;
+    const fTot = fNetto ? Math.round((fNetto + fIva) * 100) / 100 : null;
+    const bg = i % 2 === 0 ? '' : 'background:var(--crema);';
+    const fmt = v => v != null ? `€ ${v.toFixed(2)}` : 'N/D';
+    return `<tr style="${bg}">
+      <td style="padding:9px 12px;border-bottom:1px solid var(--crema-oscuro);font-weight:500">${h.label}</td>
+      <td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);color:var(--texto-suave)">${fmt(h.netto)}</td>
+      <td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);color:var(--texto-suave)">${fmt(hIva)}</td>
+      <td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);font-weight:700;color:var(--verde)">${fmt(hTot)}</td>
+      <td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);color:var(--texto-suave);border-left:1px solid var(--borde)">${fmt(fNetto)}</td>
+      <td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);color:var(--texto-suave)">${fmt(fIva)}</td>
+      <td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);font-weight:700;color:var(--verde)">${fmt(fTot)}</td>
+    </tr>`;
+  }).join('');
+}
+
+let editingShipId = null;
+let fasceCurrent = [];
+
+async function loadTariffe() {
+  try {
+    const snap = await db.collection('tariffe_spedizione').get();
+    tariffe = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderTariffe();
+    renderBRTTable();
+  } catch(e) { console.log('Tariffe error:', e); }
+}
+
+function renderTariffe() {
+  const container = document.getElementById('ship-tables-container');
+  if (!tariffe.length) {
+    container.innerHTML = `<div class="empty-state" style="padding:30px;">
+      <div class="empty-icon">🧊</div>
+      <div class="empty-title">Nessuna tabella aggiuntiva</div>
+      <p style="margin-top:8px;font-size:13px;">Aggiungi tariffe per i tuoi partner logistici</p>
+      <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="openShipModal('refrigerato')">+ Aggiungi tariffe refrigerato</button>
+    </div>`;
+    return;
+  }
+  container.innerHTML = tariffe.map(t => `
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>
+          <span style="font-weight:600">${t.nome}</span>
+          <span style="font-size:11px;color:var(--texto-suave);margin-left:8px;">chiave: <code>${t.partnerKey}</code></span>
+          ${t.noteInterne ? `<div style="font-size:12px;color:var(--texto-suave)">${t.noteInterne}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="badge badge-verde" style="font-size:10px">${t.attivo !== false ? 'Attivo' : 'Inattivo'}</span>
+          <button class="btn btn-secondary btn-sm" onclick="editShipTable('${t.id}')">Modifica</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteShipTable('${t.id}')">✕</button>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:var(--crema);">
+          <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--borde);">Fascia</th>
+          <th style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--borde);">🏠 Domicilio</th>
+          <th style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--borde);">📍 FermoPoint</th>
+        </tr></thead>
+        <tbody>${(t.fasce||[]).map((f,i) => `
+          <tr style="${i%2===0?'':'background:var(--crema);'}">
+            <td style="padding:7px 10px;border-bottom:1px solid var(--crema-oscuro);">${f.pesoMin} – ${f.pesoMax} kg</td>
+            <td style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--crema-oscuro);">${f.prezzoHome ? '€ '+parseFloat(f.prezzoHome).toFixed(2) : '—'}</td>
+            <td style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--crema-oscuro);">${f.prezzoFermo ? '€ '+parseFloat(f.prezzoFermo).toFixed(2) : 'N/D'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`).join('<hr style="border:none;border-top:1px solid var(--borde);margin:16px 0;">');
+}
+
+window.openShipModal = function(preKey) {
+  editingShipId = null;
+  fasceCurrent = [];
+  document.getElementById('ship-nome').value = '';
+  document.getElementById('ship-key').value = preKey || '';
+  document.getElementById('ship-nome-cliente').value = '';
+  document.getElementById('ship-note').value = '';
+  document.getElementById('modal-ship-title').textContent = 'Nuova tabella spedizione';
+  renderFasceTable();
+  document.getElementById('modal-spedizione').classList.add('open');
+};
+
+window.editShipTable = function(id) {
+  const t = tariffe.find(x => x.id === id);
+  if (!t) return;
+  editingShipId = id;
+  fasceCurrent = t.fasce ? [...t.fasce] : [];
+  document.getElementById('ship-nome').value = t.nome || '';
+  document.getElementById('ship-key').value = t.partnerKey || '';
+  document.getElementById('ship-nome-cliente').value = t.nomeCliente || '';
+  document.getElementById('ship-note').value = t.noteInterne || '';
+  document.getElementById('modal-ship-title').textContent = 'Modifica tabella';
+  renderFasceTable();
+  document.getElementById('modal-spedizione').classList.add('open');
+};
+
+window.closeShipModal = function() { document.getElementById('modal-spedizione').classList.remove('open'); };
+
+window.addFascia = function() {
+  fasceCurrent.push({ pesoMin: '', pesoMax: '', prezzoHome: '', prezzoFermo: '' });
+  renderFasceTable();
+};
+
+window.removeFascia = function(idx) {
+  fasceCurrent.splice(idx, 1);
+  renderFasceTable();
+};
+
+function renderFasceTable() {
+  const tbody = document.getElementById('fasce-tbody');
+  if (!fasceCurrent.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="padding:12px;text-align:center;color:var(--texto-suave);font-size:12px;">Nessuna fascia — clicca "+ Aggiungi fascia"</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = fasceCurrent.map((f, i) => `
+    <tr>
+      <td style="padding:4px;"><input type="number" step="0.001" min="0" class="form-input" style="padding:7px;font-size:12px;" value="${f.pesoMin}" placeholder="0" onchange="fasceCurrent[${i}].pesoMin=parseFloat(this.value)||0"></td>
+      <td style="padding:4px;"><input type="number" step="0.001" min="0" class="form-input" style="padding:7px;font-size:12px;" value="${f.pesoMax}" placeholder="1" onchange="fasceCurrent[${i}].pesoMax=parseFloat(this.value)||0"></td>
+      <td style="padding:4px;"><input type="number" step="0.01" min="0" class="form-input" style="padding:7px;font-size:12px;" value="${f.prezzoHome}" placeholder="0.00" onchange="fasceCurrent[${i}].prezzoHome=parseFloat(this.value)||0"></td>
+      <td style="padding:4px;"><input type="number" step="0.01" min="0" class="form-input" style="padding:7px;font-size:12px;" value="${f.prezzoFermo}" placeholder="N/D" onchange="fasceCurrent[${i}].prezzoFermo=parseFloat(this.value)||0"></td>
+      <td style="padding:4px;"><button class="btn btn-danger btn-sm" onclick="removeFascia(${i})">✕</button></td>
+    </tr>`).join('');
+}
+
+window.saveShipTable = async function() {
+  const nome = document.getElementById('ship-nome').value.trim();
+  const partnerKey = document.getElementById('ship-key').value.trim().toLowerCase().replace(/\s+/g, '_');
+  if (!nome || !partnerKey) { showToast('Nome e chiave partner obbligatori', true); return; }
+  if (!fasceCurrent.length) { showToast('Aggiungi almeno una fascia di peso', true); return; }
+  const data = {
+    nome, partnerKey,
+    nomeCliente: document.getElementById('ship-nome-cliente').value.trim() || 'Spedizione',
+    noteInterne: document.getElementById('ship-note').value.trim(),
+    fasce: fasceCurrent.map(f => ({
+      pesoMin: parseFloat(f.pesoMin) || 0,
+      pesoMax: parseFloat(f.pesoMax) || 0,
+      prezzoHome: parseFloat(f.prezzoHome) || 0,
+      prezzoFermo: parseFloat(f.prezzoFermo) || 0,
+    })),
+    attivo: true,
+    updatedAt: firebase.firestore.Timestamp.now()
+  };
+  try {
+    if (editingShipId) {
+      await db.collection('tariffe_spedizione').doc(editingShipId).update(data);
+    } else {
+      data.createdAt = firebase.firestore.Timestamp.now();
+      await db.collection('tariffe_spedizione').add(data);
+    }
+    closeShipModal();
+    await loadTariffe();
+    showToast(editingShipId ? 'Tabella aggiornata ✓' : 'Tabella creata ✓');
+  } catch(e) { showToast('Errore: ' + e.message, true); }
+};
+
+window.deleteShipTable = async function(id) {
+  if (!confirm('Eliminare questa tabella?')) return;
+  await db.collection('tariffe_spedizione').doc(id).delete();
+  await loadTariffe();
+  showToast('Tabella eliminata');
+};
+
+
 function updateStats() {
   document.getElementById('stat-productos').textContent = productos.length;
   document.getElementById('stat-categorias').textContent = categorias.length;
@@ -1317,6 +1669,31 @@ function updateStats() {
   const nuevos = pedidos.filter(p => p.estado === 'nuevo').length;
   document.getElementById('stat-pedidos').textContent = nuevos;
   document.getElementById('stat-hoy').textContent = pedidosHoy;
+
+  // Stock alerts using per-product minimum
+  const zeroStock = productos.filter(p => p.stock === 0);
+  const lowStock = productos.filter(p => {
+    const min = p.stockMinimo || 3;
+    return p.stock > 0 && p.stock <= min;
+  });
+  const alertEl = document.getElementById('stock-alerts');
+  if (!alertEl) return;
+  if (!zeroStock.length && !lowStock.length) { alertEl.style.display = 'none'; return; }
+  alertEl.style.display = 'block';
+  let alertHTML = '';
+  if (zeroStock.length) {
+    alertHTML += `<div style="background:#fee2e2;border:1px solid #fecaca;border-radius:12px;padding:14px 18px;margin-bottom:10px;">
+      <div style="font-weight:600;color:#b91c1c;margin-bottom:8px;">🚨 ${zeroStock.length} prodotto/i a ZERO stock — segnati come Agotado</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">${zeroStock.map(p=>`<span style="background:white;padding:3px 10px;border-radius:20px;font-size:12px;color:#b91c1c;">${p.nombre}</span>`).join('')}</div>
+    </div>`;
+  }
+  if (lowStock.length) {
+    alertHTML += `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:12px;padding:14px 18px;">
+      <div style="font-weight:600;color:#92400e;margin-bottom:8px;">⚠️ ${lowStock.length} prodotto/i con stock basso (≤ 3)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">${lowStock.map(p=>`<span style="background:white;padding:3px 10px;border-radius:20px;font-size:12px;color:#92400e;">${p.nombre} (${p.stock})</span>`).join('')}</div>
+    </div>`;
+  }
+  alertEl.innerHTML = alertHTML;
 }
 
 // ===== NAVIGATION =====

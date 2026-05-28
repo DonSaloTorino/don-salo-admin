@@ -1045,6 +1045,7 @@ window.toggleVisibilidad = async function(id, visible) {
   } catch(e) { showToast('Error al actualizar visibilidad', true); }
 };
 
+window.deleteProduct = async function(id) {
   if (!confirm('¿Eliminar este producto de la tienda?')) return;
   try {
     await db.collection('productos').doc(id).delete();

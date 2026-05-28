@@ -209,6 +209,8 @@
   }
   .toggle-web input:checked + .toggle-slider { background: var(--verde-claro); }
   .toggle-web input:checked + .toggle-slider::after { transform: translateX(16px); }
+  .toggle-evidenza input:checked + .toggle-slider { background: var(--dorado) !important; }
+  .toggle-evidenza input:checked + .toggle-slider::after { transform: translateX(16px); }
   .loading { text-align: center; padding: 40px; color: var(--texto-suave); }
   .spinner { width: 28px; height: 28px; border: 3px solid var(--borde); border-top-color: var(--verde); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -366,6 +368,7 @@
                 <th>Stock / Opciones</th>
                 <th>Estado</th>
                 <th title="Visible en la tienda web">🌐 Web</th>
+                <th title="Destacado en home">⭐ Evidenza</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -796,6 +799,13 @@ function renderProductos(filter) {
           <span class="toggle-slider"></span>
         </label>
       </td>
+      <td>
+        <label class="toggle-web toggle-evidenza" title="${p.inEvidenza ? 'En evidenza — quitar' : 'Poner en evidenza'}">
+          <input type="checkbox" ${p.inEvidenza ? 'checked' : ''}
+            onchange="toggleEvidenza('${p.id}', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </td>
       <td><div style="display:flex;gap:6px;">
         <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">Editar</button>
         <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">✕</button>
@@ -1043,6 +1053,23 @@ window.toggleVisibilidad = async function(id, visible) {
     const idx = productos.findIndex(p => p.id === id);
     if (idx >= 0) productos[idx].visibleEnWeb = visible;
   } catch(e) { showToast('Error al actualizar visibilidad', true); }
+};
+
+window.toggleEvidenza = async function(id, evidenza) {
+  try {
+    await db.collection('productos').doc(id).update({ inEvidenza: evidenza, updatedAt: firebase.firestore.Timestamp.now() });
+    showToast(evidenza ? '⭐ Aggiunto in evidenza!' : '✓ Rimosso dall\'evidenza');
+    const idx = productos.findIndex(p => p.id === id);
+    if (idx >= 0) {
+      productos[idx].inEvidenza = evidenza;
+      // Update slider color in DOM
+      const inputs = document.querySelectorAll(`input[onchange*="toggleEvidenza('${id}"]`);
+      inputs.forEach(inp => {
+        const slider = inp.nextElementSibling;
+        if (slider) slider.style.background = evidenza ? 'var(--dorado)' : '';
+      });
+    }
+  } catch(e) { showToast('Error al actualizar evidenza', true); }
 };
 
 window.deleteProduct = async function(id) {

@@ -1297,6 +1297,7 @@ window.ajustarStock = async function(id, delta) {
 };
 
 
+window.toggleVisibilidad = async function(id, visible) {
   try {
     await db.collection('productos').doc(id).update({ visibleEnWeb: visible, updatedAt: firebase.firestore.Timestamp.now() });
     showToast(visible ? '✅ Visible en tienda' : '🙈 Oculto de la tienda');

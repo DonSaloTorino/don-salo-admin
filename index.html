@@ -1107,12 +1107,13 @@ function renderPedidos() {
   tbody.innerHTML = pedidos.map(p => {
     const fecha = p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString('es-AR') : '—';
     const total = p.total ? `€ ${parseFloat(p.total).toFixed(2)}` : '—';
+    const entregaIcon = p.tipoEntrega==='spedizione'?'📦':'🏪';
     return `<tr>
       <td style="font-family:monospace;font-size:11px;">#${p.id.slice(-6).toUpperCase()}</td>
       <td><div style="font-weight:500">${p.clienteNombre||'—'}</div><div style="font-size:12px;color:var(--texto-suave)">${p.clienteEmail||''}</div></td>
       <td style="font-size:13px">${fecha}</td>
       <td style="font-weight:600">${total}</td>
-      <td><span class="badge badge-gris" style="font-size:10px">${p.metodoPago||'—'}</span></td>
+      <td><div style="font-size:12px">${entregaIcon} ${p.tipoEntrega||'—'}</div><span class="badge badge-gris" style="font-size:10px">${p.metodoPago||'—'}</span></td>
       <td>
         <select class="order-status-select" onchange="updatePedidoEstado('${p.id}', this.value)">
           ${['nuevo','procesando','listo','entregado','cancelado'].map(s=>`<option value="${s}" ${p.estado===s?'selected':''}>${{nuevo:'Nuevo',procesando:'En proceso',listo:'Listo',entregado:'Entregado',cancelado:'Cancelado'}[s]}</option>`).join('')}
@@ -1163,22 +1164,35 @@ window.verPedido = function(id) {
       <div style="font-weight:600">€ ${(i.cantidad * (i.precio||0)).toFixed(2)}</div>
     </div>`
   ).join('');
-  const fecha = p.createdAt?.toDate ? p.createdAt.toDate().toLocaleString('es-AR') : '—';
+  const fecha = p.createdAt?.toDate ? p.createdAt.toDate().toLocaleString('it-IT') : '—';
+  const entregaBadge = p.tipoEntrega==='spedizione'
+    ? '<span class="badge badge-azul">📦 Spedizione BRT</span>'
+    : '<span class="badge badge-verde">🏪 Ritiro in negozio</span>';
+  const spedInfo = p.spedizione ? `
+    <div style="margin-bottom:16px;background:#eff6ff;border-radius:12px;padding:14px;border:1px solid #bfdbfe">
+      <div style="font-weight:600;font-size:13px;color:#1d4ed8;margin-bottom:8px">📦 Dati spedizione BRT</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+        <div><span style="color:var(--texto-suave)">Tipo:</span> <strong>${p.spedizione.tipo==='fermopoint'?'FermoPoint':'Domicilio'}</strong></div>
+        <div><span style="color:var(--texto-suave)">Indirizzo:</span> <strong>${p.spedizione.indirizzo||'—'}</strong></div>
+        <div><span style="color:var(--texto-suave)">Città:</span> <strong>${p.spedizione.citta||'—'}</strong></div>
+        <div><span style="color:var(--texto-suave)">CAP / Prov:</span> <strong>${p.spedizione.cap||'—'} ${p.spedizione.provincia||''}</strong></div>
+      </div>
+    </div>` : '';
   document.getElementById('pedido-detalle-content').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
       <div><div class="form-label">Cliente</div><div style="font-weight:500">${p.clienteNombre||'—'}</div></div>
       <div><div class="form-label">Email</div><div>${p.clienteEmail||'—'}</div></div>
-      <div><div class="form-label">Teléfono</div><div>${p.clienteTelefono||'—'}</div></div>
-      <div><div class="form-label">Método de pago</div><div>${p.metodoPago||'—'}</div></div>
-      <div><div class="form-label">Fecha</div><div>${fecha}</div></div>
-      <div><div class="form-label">Estado</div><div>${estadoPedidoBadge(p.estado)}</div></div>
+      <div><div class="form-label">Telefono</div><div>${p.clienteTelefono||'—'}</div></div>
+      <div><div class="form-label">Pagamento</div><div>${p.metodoPago||'—'}</div></div>
+      <div><div class="form-label">Data</div><div>${fecha}</div></div>
+      <div><div class="form-label">Tipo entrega</div>${entregaBadge}</div>
     </div>
-    ${p.direccion ? `<div style="margin-bottom:16px"><div class="form-label">Dirección de entrega</div><div>${p.direccion}</div></div>` : ''}
-    ${p.notas ? `<div style="margin-bottom:16px"><div class="form-label">Notas del cliente</div><div style="background:var(--crema);padding:10px;border-radius:8px">${p.notas}</div></div>` : ''}
-    <div style="font-weight:600;margin-bottom:8px">Productos pedidos</div>
-    ${items || '<div style="color:var(--texto-suave)">Sin detalle de items</div>'}
+    ${spedInfo}
+    ${p.notas ? `<div style="margin-bottom:16px"><div class="form-label">Note cliente</div><div style="background:var(--crema);padding:10px;border-radius:8px">${p.notas}</div></div>` : ''}
+    <div style="font-weight:600;margin-bottom:8px">Prodotti ordinati</div>
+    ${items || '<div style="color:var(--texto-suave)">Nessun dettaglio</div>'}
     <div style="display:flex;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:2px solid var(--borde)">
-      <div style="font-family:Playfair Display,serif;font-size:22px;color:var(--verde)">Total: € ${parseFloat(p.total||0).toFixed(2)}</div>
+      <div style="font-family:Playfair Display,serif;font-size:22px;color:var(--verde)">Totale: € ${parseFloat(p.totalProductos||p.total||0).toFixed(2)}</div>
     </div>`;
   document.getElementById('modal-pedido').classList.add('open');
 };

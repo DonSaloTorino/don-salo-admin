@@ -252,7 +252,7 @@
     <div class="login-sub">Panel de administración</div>
     <input type="email" id="login-email" placeholder="Email" autocomplete="email">
     <input type="password" id="login-pass" placeholder="Contraseña" autocomplete="current-password">
-    <button class="btn-login" id="btn-login">Entrar →</button>
+    <button class="btn-login" id="btn-login" onclick="window._doLogin && window._doLogin()">Entrar →</button>
     <div class="login-error" id="login-error">Email o contraseña incorrectos</div>
   </div>
 </div>
@@ -644,31 +644,21 @@ async function doLogin() {
   const errEl = document.getElementById('login-error');
   const btn = document.getElementById('btn-login');
   errEl.style.display = 'none';
-  if (!email || !pass) {
-    errEl.textContent = 'Inserisci email e password';
-    errEl.style.display = 'block';
-    return;
-  }
-  btn.disabled = true;
-  btn.textContent = 'Caricamento...';
+  if (!email || !pass) { errEl.textContent = 'Inserisci email e password'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Caricamento...';
   try {
     await signInWithEmailAndPassword(auth, email, pass);
   } catch(e) {
-    errEl.textContent = 'Email o password errati';
+    errEl.textContent = 'Email o password errati (' + e.code + ')';
     errEl.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = 'Entrar →';
+    btn.disabled = false; btn.textContent = 'Entrar →';
   }
 }
-
+window._doLogin = doLogin;
 document.getElementById('btn-login').addEventListener('click', doLogin);
-
-window.doLogout = async function() {
-  await signOut(auth);
-};
-
-// ENTER en login
 document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+window.doLogout = async function() { await signOut(auth); };
 
 // ===== LOAD ALL =====
 async function loadAll() {

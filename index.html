@@ -252,7 +252,7 @@
     <div class="login-sub">Panel de administración</div>
     <input type="email" id="login-email" placeholder="Email" autocomplete="email">
     <input type="password" id="login-pass" placeholder="Contraseña" autocomplete="current-password">
-    <button class="btn-login" id="btn-login" onclick="window._doLogin && window._doLogin()">Entrar →</button>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">Entrar →</button>
     <div class="login-error" id="login-error">Email o contraseña incorrectos</div>
   </div>
 </div>
@@ -588,13 +588,12 @@
 <!-- TOAST -->
 <div id="toast"></div>
 
-<!-- FIREBASE + APP JS -->
-<script type="module">
+<!-- FIREBASE COMPAT (no modules, works everywhere) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script>
 // ===== FIREBASE CONFIG =====
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, Timestamp, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
 const firebaseConfig = {
   apiKey: "AIzaSyBDHWscBjpNLtpRhDfdY4dAqOHANor0vcE",
   authDomain: "don-salo-torino-8c279.firebaseapp.com",
@@ -605,9 +604,10 @@ const firebaseConfig = {
   measurementId: "G-W6QE02411B"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const Timestamp = firebase.firestore.Timestamp;
 
 // ===== CLOUDINARY CONFIG =====
 const CLOUDINARY_CLOUD = 'dwgf61irw';
@@ -624,7 +624,7 @@ let uploadedImageUrl = '';
 let currentCatFilter = '';
 
 // ===== AUTH =====
-onAuthStateChanged(auth, user => {
+auth.onAuthStateChanged(user => {
   if (user) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
@@ -638,7 +638,7 @@ onAuthStateChanged(auth, user => {
   }
 });
 
-async function doLogin() {
+function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-error');
@@ -646,19 +646,19 @@ async function doLogin() {
   errEl.style.display = 'none';
   if (!email || !pass) { errEl.textContent = 'Inserisci email e password'; errEl.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = 'Caricamento...';
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-  } catch(e) {
-    errEl.textContent = 'Email o password errati (' + e.code + ')';
-    errEl.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Entrar →';
-  }
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(() => { btn.disabled = false; btn.textContent = 'Entrar →'; })
+    .catch(e => {
+      errEl.textContent = 'Email o password errati (' + e.code + ')';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Entrar →';
+    });
 }
 window._doLogin = doLogin;
 document.getElementById('btn-login').addEventListener('click', doLogin);
 document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 
-window.doLogout = async function() { await signOut(auth); };
+window.doLogout = function() { auth.signOut(); };
 
 // ===== LOAD ALL =====
 async function loadAll() {
@@ -668,7 +668,7 @@ async function loadAll() {
 
 // ===== CATEGORIAS =====
 async function loadCategorias() {
-  const snap = await getDocs(collection(db, 'categorias'));
+  const snap = await db.collection('categorias').get();
   categorias = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   renderCategorias();
   renderCatFilterBtns();
@@ -737,14 +737,14 @@ window.saveCategory = async function() {
     nombre,
     emoji: document.getElementById('cat-emoji').value.trim(),
     descripcion: document.getElementById('cat-descripcion').value.trim(),
-    updatedAt: Timestamp.now()
+    updatedAt: firebase.firestore.Timestamp.now()
   };
   try {
     if (editingCatId) {
-      await updateDoc(doc(db, 'categorias', editingCatId), data);
+      await db.collection('categorias').doc(editingCatId).update(data);
     } else {
-      data.createdAt = Timestamp.now();
-      await addDoc(collection(db, 'categorias'), data);
+      data.createdAt = firebase.firestore.Timestamp.now();
+      await db.collection('categorias').add(data);
     }
     closeCatModal();
     await loadCategorias();
@@ -756,7 +756,7 @@ window.saveCategory = async function() {
 window.deleteCat = async function(id) {
   if (!confirm('¿Borrar esta categoría? Los productos que la usan quedarán sin categoría.')) return;
   try {
-    await deleteDoc(doc(db, 'categorias', id));
+    await db.collection('categorias').doc(id).delete();
     await loadCategorias();
     showToast('Categoría eliminada');
   } catch(e) { showToast('Error al eliminar', true); }
@@ -764,7 +764,7 @@ window.deleteCat = async function(id) {
 
 // ===== PRODUCTOS =====
 async function loadProductos() {
-  const snap = await getDocs(query(collection(db, 'productos'), orderBy('createdAt', 'desc')));
+  const snap = await db.collection('productos').orderBy("createdAt","desc").get();
   productos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   renderProductos();
   renderCategorias();
@@ -1018,14 +1018,14 @@ window.saveProduct = async function() {
     visibleEnWeb: true,
     inEvidenza: document.getElementById('prod-evidenza').checked,
     imagen: uploadedImageUrl,
-    updatedAt: Timestamp.now()
+    updatedAt: firebase.firestore.Timestamp.now()
   };
   try {
     if (editingProductId) {
-      await updateDoc(doc(db, 'productos', editingProductId), data);
+      await db.collection('productos').doc(editingProductId).update(data);
     } else {
-      data.createdAt = Timestamp.now();
-      await addDoc(collection(db, 'productos'), data);
+      data.createdAt = firebase.firestore.Timestamp.now();
+      await db.collection('productos').add(data);
     }
     closeProductModal();
     await loadProductos();
@@ -1038,7 +1038,7 @@ window.saveProduct = async function() {
 
 window.toggleVisibilidad = async function(id, visible) {
   try {
-    await updateDoc(doc(db, 'productos', id), { visibleEnWeb: visible, updatedAt: Timestamp.now() });
+    await db.collection('productos').doc(id).update({ visibleEnWeb: visible, updatedAt: firebase.firestore.Timestamp.now() });
     showToast(visible ? '✅ Visible en tienda' : '🙈 Oculto de la tienda');
     const idx = productos.findIndex(p => p.id === id);
     if (idx >= 0) productos[idx].visibleEnWeb = visible;
@@ -1047,7 +1047,7 @@ window.toggleVisibilidad = async function(id, visible) {
 
   if (!confirm('¿Eliminar este producto de la tienda?')) return;
   try {
-    await deleteDoc(doc(db, 'productos', id));
+    await db.collection('productos').doc(id).delete();
     await loadProductos();
     updateStats();
     showToast('Producto eliminado');
@@ -1057,7 +1057,7 @@ window.toggleVisibilidad = async function(id, visible) {
 // ===== PEDIDOS =====
 async function loadPedidos() {
   try {
-    const snap = await getDocs(query(collection(db, 'pedidos'), orderBy('createdAt', 'desc')));
+    const snap = await db.collection('pedidos').orderBy("createdAt","desc").get();
     pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch(e) { pedidos = []; }
   renderPedidos();
@@ -1118,7 +1118,7 @@ function renderDashboardPedidos() {
 
 window.updatePedidoEstado = async function(id, estado) {
   try {
-    await updateDoc(doc(db, 'pedidos', id), { estado, updatedAt: Timestamp.now() });
+    await db.collection('pedidos').doc(id).update({ estado, updatedAt: firebase.firestore.Timestamp.now() });
     showToast('Estado actualizado ✓');
     const idx = pedidos.findIndex(p => p.id === id);
     if (idx >= 0) pedidos[idx].estado = estado;

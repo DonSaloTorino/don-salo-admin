@@ -284,6 +284,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17H5a2 2 0 00-2 2v0a2 2 0 002 2h14a2 2 0 002-2v0a2 2 0 00-2-2h-4"/><path d="M12 12v6M12 12l-3-3M12 12l3-3"/><rect x="5" y="2" width="14" height="12" rx="2"/></svg>
         Pedidos
       </button>
+      <button class="nav-item" onclick="showPage('spedizioni')" data-page="spedizioni">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        Spedizioni
+      </button>
     </nav>
     <div class="sidebar-user">
       <div class="user-avatar" id="user-avatar">S</div>
@@ -427,8 +431,86 @@
       </div>
     </div>
 
+    <!-- SPEDIZIONI -->
+    <div class="page" id="page-spedizioni">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Spedizioni</div>
+          <div class="page-subtitle">Gestisci le tariffe di spedizione per partner logistico</div>
+        </div>
+        <button class="btn btn-primary" onclick="openShipModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuova tabella
+        </button>
+      </div>
+
+      <!-- BRT Standard - pre-loaded -->
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div>
+            <div style="font-weight:600;font-size:16px;">🚚 BRT Standard — SMART DOMESTIC</div>
+            <div style="font-size:13px;color:var(--texto-suave);">Consegna 1–2 giorni · Italia · Partner: BRT S.p.A</div>
+          </div>
+          <span class="badge badge-verde">Attivo</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--crema);">
+              <th style="padding:10px 12px;text-align:left;border-bottom:1px solid var(--borde);">Fascia di peso</th>
+              <th style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--borde);">🏠 Domicilio (Italia)</th>
+              <th style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--borde);">📍 FermoPoint</th>
+              <th style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--borde);">🏝 Calabria/Sic/Sard</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:9px 12px;border-bottom:1px solid var(--crema-oscuro);">0 – 1 kg</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 6,39</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 5,39</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 7,89</td></tr>
+            <tr style="background:var(--crema);"><td style="padding:9px 12px;border-bottom:1px solid var(--crema-oscuro);">1,1 – 3 kg</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 6,59</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 5,79</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 8,19</td></tr>
+            <tr><td style="padding:9px 12px;border-bottom:1px solid var(--crema-oscuro);">3,1 – 5 kg</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 7,39</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 6,39</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 8,89</td></tr>
+            <tr style="background:var(--crema);"><td style="padding:9px 12px;border-bottom:1px solid var(--crema-oscuro);">5,1 – 10 kg</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 9,29</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 8,29</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 11,29</td></tr>
+            <tr><td style="padding:9px 12px;border-bottom:1px solid var(--crema-oscuro);">10,1 – 20 kg</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 12,59</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 11,59</td><td style="text-align:center;padding:9px;border-bottom:1px solid var(--crema-oscuro);">€ 14,99</td></tr>
+            <tr style="background:var(--crema);"><td style="padding:9px 12px;">20,1 – 30 kg</td><td style="text-align:center;padding:9px;">€ 16,99</td><td style="text-align:center;padding:9px;">N/D (max 20kg)</td><td style="text-align:center;padding:9px;">€ 19,99</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:12px;padding:10px 14px;background:#fef9c3;border-radius:8px;font-size:12px;color:#854d0e;">
+          ⚠️ Questi prezzi si applicano ai prodotti con <strong>Partner logístico = BRT Standard</strong>. Il calcolo è automatico in base al peso totale del carrello.
+        </div>
+      </div>
+
+      <!-- Refrigerato -->
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div>
+            <div style="font-weight:600;font-size:16px;">🧊 BRT Refrigerato / Carni</div>
+            <div style="font-size:13px;color:var(--texto-suave);">Spedizione refrigerata · Solo domicilio · Aggiungere tariffe</div>
+          </div>
+          <span class="badge badge-naranja">Da configurare</span>
+        </div>
+        <div id="ship-tables-container">
+          <div class="empty-state" style="padding:30px;">
+            <div class="empty-icon">🧊</div>
+            <div class="empty-title">Tabella refrigerato non ancora configurata</div>
+            <p style="margin-top:8px;font-size:13px;">Carica le tariffe del tuo partner logistico per le spedizioni refrigerate</p>
+            <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="openShipModal('refrigerato')">+ Aggiungi tariffe refrigerato</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="card" style="background:var(--crema);">
+        <div style="font-weight:600;margin-bottom:10px;">📋 Come funziona il calcolo automatico</div>
+        <div style="font-size:13px;color:var(--texto-medio);line-height:1.7;">
+          <p>1. Ogni prodotto ha un <strong>peso unitario</strong> e un <strong>partner logístico</strong> assegnato</p>
+          <p>2. Quando il cliente sceglie "Spedizione", il sistema calcola il <strong>peso totale</strong> del carrello per ciascun partner</p>
+          <p>3. Il costo viene calcolato automaticamente dalla tabella tariffaria corrispondente</p>
+          <p>4. Se il carrello contiene prodotti di partner diversi (es: BRT + Refrigerato), vengono mostrati i costi separatamente</p>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /main -->
 </div><!-- /app -->
+
+<!-- ===== SPEDIZIONI PAGE (inside main) ===== -->
 
 <!-- MODAL PRODUCTO -->
 <div class="modal-overlay" id="modal-producto">
@@ -527,6 +609,27 @@
         <option value="inactivo">Inactivo (oculto)</option>
         <option value="agotado">Agotado (sin stock)</option>
       </select>
+    </div>
+
+    <!-- PESO Y LOGISTICA -->
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">⚖️ Peso unitario (kg)</label>
+        <div style="position:relative;">
+          <input type="number" class="form-input" id="prod-peso" placeholder="0.000" step="0.001" min="0" style="padding-right:40px;">
+          <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--texto-suave);">kg</span>
+        </div>
+        <div class="form-hint">Peso del producto para calcular el envío</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">🚚 Partner logístico</label>
+        <select class="form-select" id="prod-partner">
+          <option value="brt">BRT Standard</option>
+          <option value="refrigerato">BRT Refrigerato 🧊</option>
+          <option value="ritiro_solo">Solo ritiro in negozio</option>
+        </select>
+        <div class="form-hint">Tipo de envío para este producto</div>
+      </div>
     </div>
 
     <!-- IN EVIDENZA -->
@@ -784,13 +887,15 @@ function renderProductos(filter) {
     const cat = categorias.find(c => c.id === p.categoriaId);
     const precioStr = p.precio ? `€ ${parseFloat(p.precio).toFixed(2)}<span style="font-size:11px;color:var(--texto-suave);font-weight:400"> ${p.precioPorKg ? '/kg' : '/ud.'}</span>` : '—';
     const kgStr = p.kgOpciones && p.kgOpciones.length ? p.kgOpciones.slice(0,3).join(', ') + (p.kgOpciones.length>3?'...':'') : '—';
+    const pesoStr = p.peso ? `${parseFloat(p.peso).toFixed(3)} kg` : '—';
+    const partnerIcon = p.partnerLogistico === 'refrigerato' ? '🧊' : p.partnerLogistico === 'ritiro_solo' ? '🏪' : '🚚';
     const estadoBadge = p.estado === 'activo' ? '<span class="badge badge-verde">Activo</span>' : p.estado === 'agotado' ? '<span class="badge badge-rojo">Agotado</span>' : '<span class="badge badge-gris">Inactivo</span>';
     const imgEl = p.imagen ? `<img src="${p.imagen}" class="prod-img" onerror="this.style.display='none'">` : `<div class="prod-img-placeholder">${cat?.emoji||'📦'}</div>`;
     return `<tr>
       <td><div style="display:flex;align-items:center;gap:12px;">${imgEl}<div><div style="font-weight:500">${p.nombre}</div>${p.descripcion?`<div style="font-size:12px;color:var(--texto-suave);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.descripcion}</div>`:''}</div></div></td>
       <td>${cat ? `${cat.emoji||''} ${cat.nombre}` : '<span style="color:var(--texto-suave)">—</span>'}</td>
       <td style="font-weight:500">${precioStr}</td>
-      <td style="font-size:12px;color:var(--texto-medio)">${kgStr}</td>
+      <td style="font-size:12px;color:var(--texto-medio)">${kgStr}${pesoStr !== '—' ? `<div style="font-size:11px;color:var(--texto-suave);">${partnerIcon} ${pesoStr}</div>` : ''}</td>
       <td>${estadoBadge}</td>
       <td>
         <label class="toggle-web" title="${p.visibleEnWeb === false ? 'Oculto en web' : 'Visible en web'}">
@@ -829,6 +934,8 @@ window.openProductModal = function() {
   document.getElementById('prod-precio').value = '';
   document.getElementById('prod-descripcion').value = '';
   document.getElementById('prod-estado').value = 'activo';
+  document.getElementById('prod-peso').value = '';
+  document.getElementById('prod-partner').value = 'brt';
   document.getElementById('prod-evidenza').checked = false;
   document.getElementById('evidenza-label').style.borderColor = 'var(--borde)';
   document.getElementById('evidenza-label').style.background = 'white';
@@ -855,6 +962,8 @@ window.editProduct = function(id) {
   document.getElementById('prod-precio').value = p.precio || '';
   document.getElementById('prod-descripcion').value = p.descripcion || '';
   document.getElementById('prod-estado').value = p.estado || 'activo';
+  document.getElementById('prod-peso').value = p.peso || '';
+  document.getElementById('prod-partner').value = p.partnerLogistico || 'brt';
   document.getElementById('prod-evidenza').checked = p.inEvidenza === true;
   toggleEvidenzaStyle();
   // restore price type
@@ -1027,6 +1136,8 @@ window.saveProduct = async function() {
     estado: document.getElementById('prod-estado').value,
     visibleEnWeb: true,
     inEvidenza: document.getElementById('prod-evidenza').checked,
+    peso: parseFloat(document.getElementById('prod-peso').value) || 0,
+    partnerLogistico: document.getElementById('prod-partner').value || 'brt',
     imagen: uploadedImageUrl,
     updatedAt: firebase.firestore.Timestamp.now()
   };

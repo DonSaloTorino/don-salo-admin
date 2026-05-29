@@ -987,7 +987,6 @@ function renderProductos(filter) {
       <td>${cat ? `${cat.emoji||''} ${cat.nombre}` : '<span style="color:var(--texto-suave)">—</span>'}</td>
       <td style="font-weight:500">${precioStr}</td>
       <td style="font-size:12px;color:var(--texto-medio)">${kgStr}${pesoStr !== '—' ? `<div style="font-size:11px;color:var(--texto-suave);">${partnerIcon} ${pesoStr}</div>` : ''}</td>
-      <td>${estadoBadge}</td>
       <td>
         ${stockDisp === null
           ? `<div class="stock-ctrl">
@@ -1016,6 +1015,7 @@ function renderProductos(filter) {
             </div>`
         }
       </td>
+      <td>${estadoBadge}</td>
       <td>
         <label class="toggle-web" title="${p.visibleEnWeb === false ? 'Oculto en web' : 'Visible en web'}">
           <input type="checkbox" ${p.visibleEnWeb === false ? '' : 'checked'}

@@ -1581,16 +1581,38 @@ function renderTariffe() {
     </div>`;
     return;
   }
-  container.innerHTML = tariffe.map(t => `
-    <div style="margin-bottom:16px;">
+  container.innerHTML = tariffe.map(t => {
+    if (t.partnerKey === 'stef' && t.zone) {
+      return `<div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div><span style="font-weight:600">🧊 ${t.nome}</span>
+          <div style="font-size:12px;color:var(--texto-suave);margin-top:2px;">${t.noteInterne||''}</div></div>
+          <div style="display:flex;gap:6px;"><span class="badge badge-verde" style="font-size:10px">Attivo</span>
+          <button class="btn btn-danger btn-sm" onclick="deleteShipTable('${t.id}')">✕</button></div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="background:var(--verde);color:white;">
+            <th style="padding:9px 12px;text-align:left;">Zona</th>
+            <th style="padding:9px 12px;text-align:left;">CAP di riferimento</th>
+            <th style="padding:9px 12px;text-align:center;font-weight:700;">Costo ✓</th>
+          </tr></thead>
+          <tbody>${t.zone.map((z,i)=>`<tr style="${i%2===0?'':'background:var(--crema);'}">
+            <td style="padding:9px 12px;font-weight:500;">${z.label}</td>
+            <td style="padding:9px 12px;font-size:11px;color:var(--texto-suave);">${z.capRange}</td>
+            <td style="padding:9px 12px;text-align:center;font-weight:700;color:var(--verde);">€ ${parseFloat(z.costo).toFixed(2)}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+        <div style="margin-top:8px;font-size:11px;color:var(--texto-suave);">✓ IVA inclusa · Solo domicilio · Calcolo automatico dal CAP cliente</div>
+      </div>`;
+    }
+    return `<div style="margin-bottom:16px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div>
-          <span style="font-weight:600">${t.nome}</span>
+        <div><span style="font-weight:600">${t.nome}</span>
           <span style="font-size:11px;color:var(--texto-suave);margin-left:8px;">chiave: <code>${t.partnerKey}</code></span>
-          ${t.noteInterne ? `<div style="font-size:12px;color:var(--texto-suave)">${t.noteInterne}</div>` : ''}
+          ${t.noteInterne?`<div style="font-size:12px;color:var(--texto-suave)">${t.noteInterne}</div>`:''}
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
-          <span class="badge badge-verde" style="font-size:10px">${t.attivo !== false ? 'Attivo' : 'Inattivo'}</span>
+          <span class="badge badge-verde" style="font-size:10px">${t.attivo!==false?'Attivo':'Inattivo'}</span>
           <button class="btn btn-secondary btn-sm" onclick="editShipTable('${t.id}')">Modifica</button>
           <button class="btn btn-danger btn-sm" onclick="deleteShipTable('${t.id}')">✕</button>
         </div>
@@ -1601,15 +1623,16 @@ function renderTariffe() {
           <th style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--borde);">🏠 Domicilio</th>
           <th style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--borde);">📍 FermoPoint</th>
         </tr></thead>
-        <tbody>${(t.fasce||[]).map((f,i) => `
+        <tbody>${(t.fasce||[]).map((f,i)=>`
           <tr style="${i%2===0?'':'background:var(--crema);'}">
             <td style="padding:7px 10px;border-bottom:1px solid var(--crema-oscuro);">${f.pesoMin} – ${f.pesoMax} kg</td>
-            <td style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--crema-oscuro);">${f.prezzoHome ? '€ '+parseFloat(f.prezzoHome).toFixed(2) : '—'}</td>
-            <td style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--crema-oscuro);">${f.prezzoFermo ? '€ '+parseFloat(f.prezzoFermo).toFixed(2) : 'N/D'}</td>
+            <td style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--crema-oscuro);">${f.prezzoHome?'€ '+parseFloat(f.prezzoHome).toFixed(2):'—'}</td>
+            <td style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--crema-oscuro);">${f.prezzoFermo?'€ '+parseFloat(f.prezzoFermo).toFixed(2):'N/D'}</td>
           </tr>`).join('')}
         </tbody>
       </table>
-    </div>`).join('<hr style="border:none;border-top:1px solid var(--borde);margin:16px 0;">');
+    </div>`;
+  }).join('<hr style="border:none;border-top:1px solid var(--borde);margin:16px 0;">');
 }
 
 window.openShipModal = function(preKey) {

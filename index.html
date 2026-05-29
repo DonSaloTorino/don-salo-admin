@@ -980,7 +980,18 @@ function renderProductos(filter) {
     const stockMin = p.stockMinimo || 3;
     const stockReserv = p.stockReservado || 0;
     const stockDisp = p.stock !== null && p.stock !== undefined ? Math.max(0, p.stock - stockReserv) : null;
-    const estadoBadge = p.estado === 'activo' ? '<span class="badge badge-verde">Activo</span>' : p.estado === 'agotado' ? '<span class="badge badge-rojo">Agotado</span>' : '<span class="badge badge-gris">Inactivo</span>';
+    const estadoColors = {activo:'badge-verde',agotado:'badge-rojo',inactivo:'badge-gris'};
+    const estadoLabels = {activo:'Activo',agotado:'Agotado',inactivo:'Inactivo'};
+    const estadoBadge = `<select
+      class="badge ${estadoColors[p.estado]||'badge-gris'}"
+      style="border:none;cursor:pointer;font-weight:600;font-size:11px;padding:4px 6px;border-radius:20px;appearance:none;-webkit-appearance:none;text-align:center;"
+      onchange="event.stopPropagation();cambiarEstado('${p.id}',this.value,this)"
+      onclick="event.stopPropagation()"
+      title="Clicca per cambiare stato">
+      <option value="activo" ${p.estado==='activo'?'selected':''}>✅ Activo</option>
+      <option value="agotado" ${p.estado==='agotado'?'selected':''}>❌ Agotado</option>
+      <option value="inactivo" ${p.estado==='inactivo'?'selected':''}>⚫ Inactivo</option>
+    </select>`;
     const imgEl = p.imagen ? `<img src="${p.imagen}" class="prod-img" onerror="this.style.display='none'">` : `<div class="prod-img-placeholder">${cat?.emoji||'📦'}</div>`;
     return `<tr>
       <td><div style="display:flex;align-items:center;gap:12px;">${imgEl}<div><div style="font-weight:500">${p.nombre}</div>${p.descripcion?`<div style="font-size:12px;color:var(--texto-suave);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.descripcion}</div>`:''}</div></div></td>
@@ -1339,6 +1350,29 @@ window.ajustarStock = async function(id, delta) {
   } catch(e) { showToast('Errore aggiornamento stock', true); }
 };
 
+
+window.cambiarEstado = async function(id, nuovoStato, selectEl) {
+  const p = productos.find(x => x.id === id);
+  if (!p) return;
+  const oldStato = p.estado;
+  try {
+    await db.collection('productos').doc(id).update({
+      estado: nuovoStato,
+      updatedAt: firebase.firestore.Timestamp.now()
+    });
+    p.estado = nuovoStato;
+    // Update select color
+    const colors = {activo:'badge-verde', agotado:'badge-rojo', inactivo:'badge-gris'};
+    selectEl.className = `badge ${colors[nuovoStato]}`;
+    selectEl.style.cssText = 'border:none;cursor:pointer;font-weight:600;font-size:11px;padding:4px 6px;border-radius:20px;appearance:none;-webkit-appearance:none;text-align:center;';
+    const labels = {activo:'✅ Activo', agotado:'❌ Agotado', inactivo:'⚫ Inactivo'};
+    showToast(`${p.nombre} → ${labels[nuovoStato]}`);
+    updateStats();
+  } catch(e) {
+    showToast('Errore cambio stato', true);
+    selectEl.value = oldStato; // revert
+  }
+};
 
 window.toggleVisibilidad = async function(id, visible) {
   try {

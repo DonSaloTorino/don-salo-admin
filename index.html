@@ -990,12 +990,27 @@ function renderProductos(filter) {
       <td>${estadoBadge}</td>
       <td>
         ${stockDisp === null
-          ? '<div class="stock-na">—</div>'
+          ? `<div class="stock-ctrl">
+              <input type="number" min="0" step="1" placeholder="—"
+                class="stock-na"
+                style="width:52px;border:1.5px dashed var(--borde);border-radius:7px;padding:3px 4px;font-size:13px;text-align:center;background:var(--crema);cursor:text;"
+                onclick="event.stopPropagation()"
+                onchange="event.stopPropagation();setStockDirect('${p.id}', parseInt(this.value)||0, this)"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                title="Clicca per impostare il stock">
+            </div>`
           : `<div class="stock-ctrl">
               <button class="stock-btn" onclick="event.stopPropagation();ajustarStock('${p.id}',-1)" title="Quitar 1">−</button>
               <div style="text-align:center;">
-                <span class="stock-num ${stockDisp === 0 ? 'zero' : stockDisp <= stockMin ? 'low' : ''}">${stockDisp}</span>
-                ${stockReserv > 0 ? `<div style="font-size:10px;color:#d97706;font-weight:600;">🔒 ${stockReserv} riservati</div>` : ''}
+                <input type="number" min="0" step="1"
+                  value="${stockDisp}"
+                  class="stock-num ${stockDisp === 0 ? 'zero' : stockDisp <= stockMin ? 'low' : ''}"
+                  style="width:52px;border:1.5px solid var(--borde);border-radius:7px;padding:3px 4px;font-family:var(--font-sans);font-size:14px;text-align:center;background:white;cursor:text;"
+                  onclick="event.stopPropagation()"
+                  onchange="event.stopPropagation();setStockDirect('${p.id}', parseInt(this.value)||0, this)"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                  title="Clicca per modificare il stock">
+                ${stockReserv > 0 ? `<div style="font-size:10px;color:#d97706;font-weight:600;">🔒 ${stockReserv} ris.</div>` : ''}
               </div>
               <button class="stock-btn" onclick="event.stopPropagation();ajustarStock('${p.id}',1)" title="Agregar 1">+</button>
             </div>`
@@ -1265,6 +1280,31 @@ window.saveProduct = async function() {
     editingProductId = null;
   } catch(e) { showToast('Error al guardar: ' + e.message, true); }
   finally { btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Guardar producto'; }
+};
+
+window.setStockDirect = async function(id, newStock, inputEl) {
+  const p = productos.find(x => x.id === id);
+  if (!p) return;
+  const stockMin = p.stockMinimo || 3;
+  const stockReserv = p.stockReservado || 0;
+  const newDisp = Math.max(0, newStock - stockReserv);
+  try {
+    await db.collection('productos').doc(id).update({
+      stock: newStock,
+      ...(newStock === 0 && p.estado === 'activo' ? { estado: 'agotado' } : {}),
+      ...(newStock > 0 && p.estado === 'agotado' ? { estado: 'activo' } : {}),
+      updatedAt: firebase.firestore.Timestamp.now()
+    });
+    p.stock = newStock;
+    if (newStock === 0 && p.estado === 'activo') p.estado = 'agotado';
+    if (newStock > 0 && p.estado === 'agotado') p.estado = 'activo';
+    // Update input color
+    inputEl.className = `stock-num ${newDisp === 0 ? 'zero' : newDisp <= stockMin ? 'low' : ''}`;
+    inputEl.style.cssText = `width:52px;border:1.5px solid var(--borde);border-radius:7px;padding:3px 4px;font-family:var(--font-sans);font-size:14px;text-align:center;background:white;cursor:text;`;
+    const msg = newDisp === 0 ? `⚠️ ${p.nombre} → Non disponibile` : `✓ Stock: ${p.nombre} → ${newDisp}`;
+    showToast(msg, newDisp === 0);
+    updateStats();
+  } catch(e) { showToast('Errore salvataggio stock', true); inputEl.value = p.stock || 0; }
 };
 
 window.ajustarStock = async function(id, delta) {

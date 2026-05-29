@@ -1401,7 +1401,7 @@ function renderPedidos() {
   tbody.innerHTML = pedidos.map(p => {
     const fecha = p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString('es-AR') : '—';
     const total = p.total ? `€ ${parseFloat(p.total).toFixed(2)}` : '—';
-    const entregaIcon = p.tipoEntrega==='spedizione'?'📦':'🏪';
+    const entregaIcon = p.tipoSpedizione==='refrigerata_stef' ? '🧊' : p.tipoEntrega==='spedizione' ? '📦' : '🏪';
     return `<tr>
       <td style="font-family:monospace;font-size:11px;">#${p.id.slice(-6).toUpperCase()}</td>
       <td><div style="font-weight:500">${p.clienteNombre||'—'}</div><div style="font-size:12px;color:var(--texto-suave)">${p.clienteEmail||''}</div></td>

@@ -858,6 +858,7 @@ window.doLogout = function() { auth.signOut(); };
 async function loadAll() {
   await Promise.all([loadCategorias(), loadProductos(), loadPedidos(), loadTariffe()]);
   updateStats();
+  watchWebOrders();
 }
 
 // ===== CATEGORIAS =====
@@ -1411,6 +1412,49 @@ window.deleteProduct = async function(id) {
 };
 
 // ===== PEDIDOS =====
+// ===== ALERTAS DE PEDIDOS WEB EN TIEMPO REAL =====
+let _webOrderKnownIds = null; // null = primera carga, no alertar
+function playWebAlert(){
+  try{
+    const c=new (window.AudioContext||window.webkitAudioContext)();
+    [0,160,320].forEach(d=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;o.type='sine';g.gain.setValueAtTime(0.35,c.currentTime+d/1000);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d/1000+0.3);o.start(c.currentTime+d/1000);o.stop(c.currentTime+d/1000+0.3);});
+  }catch(e){}
+}
+function showWebOrderBanner(p){
+  let b=document.getElementById('web-order-alert');
+  if(!b){
+    b=document.createElement('div');
+    b.id='web-order-alert';
+    b.style.cssText='position:fixed;top:20px;right:20px;z-index:99999;background:#e00;color:#fff;padding:16px 22px;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,0.35);font-family:DM Sans,sans-serif;font-weight:700;cursor:pointer;max-width:320px;';
+    b.onclick=()=>{ b.style.display='none'; try{ showPage('pedidos'); }catch(e){} };
+    document.body.appendChild(b);
+  }
+  b.innerHTML='🌐 Nuovo ordine WEB!<div style="font-size:13px;font-weight:400;margin-top:4px;">'+((p.clienteNombre||'Cliente'))+(p.pagado?' · ✓ PAGATO':'')+'</div><div style="font-size:11px;opacity:0.85;margin-top:6px;">Clic per vedere →</div>';
+  b.style.display='block';
+}
+function watchWebOrders(){
+  try{
+    db.collection('pedidos').where('canale','==','web').onSnapshot(snap=>{
+      if(_webOrderKnownIds===null){
+        _webOrderKnownIds=new Set(snap.docs.map(d=>d.id));
+        return;
+      }
+      let huboNuevo=false;
+      snap.docChanges().forEach(ch=>{
+        if(ch.type==='added' && !_webOrderKnownIds.has(ch.doc.id)){
+          _webOrderKnownIds.add(ch.doc.id);
+          huboNuevo=true;
+          playWebAlert();
+          showWebOrderBanner({id:ch.doc.id,...ch.doc.data()});
+        }
+      });
+      if(huboNuevo){
+        loadPedidos().then(()=>{ try{renderPedidos();renderDashboardPedidos();updateStats();}catch(e){} }).catch(()=>{});
+      }
+    }, err=>{ console.error('watchWebOrders', err); });
+  }catch(e){ console.error('watchWebOrders init', e); }
+}
+
 async function loadPedidos() {
   try {
     const snap = await db.collection('pedidos').orderBy("createdAt","desc").get();
@@ -1434,11 +1478,11 @@ function renderPedidos() {
   }
   tbody.innerHTML = pedidos.map(p => {
     const fecha = p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString('es-AR') : '—';
-    const total = p.total ? `€ ${parseFloat(p.total).toFixed(2)}` : '—';
+    const total = (p.total||p.totalOrdine) ? `€ ${parseFloat(p.total||p.totalOrdine).toFixed(2)}` : '—';
     const entregaIcon = p.tipoSpedizione==='refrigerata_stef' ? '🧊' : p.tipoEntrega==='spedizione' ? '📦' : '🏪';
     return `<tr>
       <td style="font-family:monospace;font-size:11px;">#${p.id.slice(-6).toUpperCase()}</td>
-      <td><div style="font-weight:500">${p.clienteNombre||'—'}</div><div style="font-size:12px;color:var(--texto-suave)">${p.clienteEmail||''}</div></td>
+      <td><div style="font-weight:500">${p.clienteNombre||'—'}${p.canale==='web'?' <span class="badge" style="background:#e00;color:#fff;font-size:10px;">🌐 WEB</span>':''}${p.pagado?' <span class="badge" style="background:#16a34a;color:#fff;font-size:10px;">✓ PAGATO</span>':''}</div><div style="font-size:12px;color:var(--texto-suave)">${p.clienteEmail||''}</div></td>
       <td style="font-size:13px">${fecha}</td>
       <td style="font-weight:600">${total}</td>
       <td><div style="font-size:12px">${entregaIcon} ${p.tipoEntrega||'—'}</div><span class="badge badge-gris" style="font-size:10px">${p.metodoPago||'—'}</span></td>

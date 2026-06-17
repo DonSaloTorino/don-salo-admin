@@ -522,11 +522,14 @@
                 <th>Scatole</th>
                 <th>Tapas tot.</th>
                 <th>Totale</th>
-                <th>Stato</th>
+                <th style="text-align:center;">Spedito</th>
+                <th style="text-align:center;">Fatturato</th>
+                <th style="text-align:center;">Pagato</th>
+                <th style="text-align:center;">Azioni</th>
               </tr>
             </thead>
             <tbody id="b2b-ordini-tbody">
-              <tr><td colspan="7"><div class="loading"><div class="spinner"></div>Caricamento...</div></td></tr>
+              <tr><td colspan="10"><div class="loading"><div class="spinner"></div>Caricamento...</div></td></tr>
             </tbody>
           </table>
         </div>
@@ -1933,6 +1936,28 @@ async function disattivaB2B(docId) {
   }
 }
 
+window.toggleOrdineFlag = async function(id, field, checked) {
+  const labels = { spedito: 'Spedito', fatturato: 'Fatturato', pagato: 'Pagato' };
+  try {
+    await db.collection('ordini_b2b').doc(id).update({ [field]: checked });
+    showToast(`${labels[field]}: ${checked ? 'sì' : 'no'}`);
+  } catch(e) {
+    showToast('Errore: ' + e.message, true);
+    caricaB2B();
+  }
+}
+
+window.eliminaOrdine = async function(id) {
+  if (!confirm('Eliminare definitivamente questo ordine? L\'azione non è reversibile.')) return;
+  try {
+    await db.collection('ordini_b2b').doc(id).delete();
+    showToast('🗑️ Ordine eliminato.');
+    caricaB2B();
+  } catch(e) {
+    showToast('Errore: ' + e.message, true);
+  }
+}
+
 function copiaTestoCodice(codice, email) {
   const testo = 'Ciao! Il tuo codice di accesso al listino tapas Don Salo è: ' + codice + '\nAccedi qui: https://don-salo-tienda.vercel.app/tapas-ristorazione.html';
   navigator.clipboard.writeText(testo).then(() => showToast('📋 Testo copiato! Incollalo su WhatsApp o email.'));
@@ -2009,13 +2034,14 @@ async function caricaB2B() {
     // Ordini B2B
     const ordSnap = await db.collection('ordini_b2b').orderBy('createdAt','desc').limit(50).get();
     if (ordSnap.empty) {
-      ordiniTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;padding:20px;">Nessun ordine ricevuto</td></tr>';
+      ordiniTbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#888;padding:20px;">Nessun ordine ricevuto</td></tr>';
     } else {
       ordiniTbody.innerHTML = '';
       ordSnap.forEach(doc => {
         const o = doc.data();
+        const id = doc.id;
         const data = o.createdAt ? new Date(o.createdAt.seconds*1000).toLocaleDateString('it-IT') : '—';
-        const statoColor = o.stato==='nuovo' ? '#2e7d32' : '#888';
+        const chk = (field) => `<input type="checkbox" ${o[field]?'checked':''} onchange="toggleOrdineFlag('${id}','${field}',this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:#2e7d32;">`;
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${data}</td>
@@ -2024,7 +2050,10 @@ async function caricaB2B() {
           <td>${o.totaleScatole||'—'}</td>
           <td>${(o.totaleTapas||0).toLocaleString('it-IT')}</td>
           <td><strong>€ ${(o.totale||0).toFixed(2).replace('.',',')}</strong></td>
-          <td><span style="color:${statoColor};font-weight:700;">${o.stato||'—'}</span></td>`;
+          <td style="text-align:center;">${chk('spedito')}</td>
+          <td style="text-align:center;">${chk('fatturato')}</td>
+          <td style="text-align:center;">${chk('pagato')}</td>
+          <td style="text-align:center;"><button class="btn btn-secondary btn-sm" onclick="eliminaOrdine('${id}')" title="Elimina ordine" style="color:#b3261e;">🗑️</button></td>`;
         ordiniTbody.appendChild(row);
       });
     }

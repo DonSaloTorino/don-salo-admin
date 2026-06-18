@@ -80,7 +80,9 @@
     display: flex; align-items: center; gap: 12px; padding: 11px 14px;
     border-radius: 10px; cursor: pointer; color: rgba(255,255,255,0.65);
     font-size: 14px; font-weight: 400; transition: all 0.15s; border: none; background: none; width: 100%; text-align: left;
+    position: relative;
   }
+  .nav-badge { position: absolute; top: 6px; right: 10px; background: #dc2626; color: white; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; line-height: 1.4; }
   .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
   .nav-item.active { background: var(--dorado); color: var(--verde); font-weight: 600; }
   .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
@@ -295,6 +297,11 @@
       <button class="nav-item" onclick="showPage('spedizioni')" data-page="spedizioni">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
         Spedizioni
+      </button>
+      <button class="nav-item" onclick="showPage('b2b')" data-page="b2b">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        B2B
+        <span class="nav-badge" id="b2b-badge" style="display:none;">0</span>
       </button>
     </nav>
     <div class="sidebar-user">
@@ -518,6 +525,58 @@
           <p>2. Quando il cliente sceglie "Spedizione", il sistema calcola il <strong>peso totale</strong> del carrello per ciascun partner</p>
           <p>3. Il costo viene calcolato automaticamente dalla tabella tariffaria corrispondente</p>
           <p>4. Se il carrello contiene prodotti di partner diversi (es: BRT + Refrigerato), vengono mostrati i costi separatamente</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- B2B -->
+    <div class="page" id="page-b2b">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Clienti B2B 📦</div>
+          <div class="page-subtitle">Richieste di accesso al listino tapas all'ingrosso</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div style="font-weight:600;font-size:15px;margin-bottom:14px;">⏳ Richieste in attesa di approvazione</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Ragione sociale</th><th>P.IVA</th><th>Referente</th><th>Email</th><th>Tel</th><th>VIES</th><th>Data</th><th>Azione</th>
+            </tr></thead>
+            <tbody id="b2b-pendientes-tbody">
+              <tr><td colspan="8"><div class="loading"><div class="spinner"></div>Caricamento...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div style="font-weight:600;font-size:15px;margin-bottom:14px;">✅ Clienti attivi</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Ragione sociale</th><th>P.IVA</th><th>Email</th><th>Codice accesso</th><th>Attivato</th><th>Azione</th>
+            </tr></thead>
+            <tbody id="b2b-attivi-tbody">
+              <tr><td colspan="6"><div class="loading"><div class="spinner"></div>Caricamento...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:600;font-size:15px;margin-bottom:14px;">📦 Ordini tapas ricevuti</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Data</th><th>Cliente</th><th>P.IVA</th><th>Scatole</th><th>Tapas tot.</th><th>Totale</th><th>Spedito</th><th>Fatturato</th><th>Pagato</th><th>Azioni</th>
+            </tr></thead>
+            <tbody id="b2b-ordini-tbody">
+              <tr><td colspan="10"><div class="loading"><div class="spinner"></div>Caricamento...</div></td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -856,7 +915,7 @@ window.doLogout = function() { auth.signOut(); };
 
 // ===== LOAD ALL =====
 async function loadAll() {
-  await Promise.all([loadCategorias(), loadProductos(), loadPedidos(), loadTariffe()]);
+  await Promise.all([loadCategorias(), loadProductos(), loadPedidos(), loadTariffe(), loadB2B()]);
   updateStats();
 }
 
@@ -1809,6 +1868,167 @@ function updateStats() {
   }
   alertEl.innerHTML = alertHTML;
 }
+
+// ===== B2B =====
+let b2bPendientes = [], b2bActivos = [], b2bOrdini = [];
+
+async function loadB2B() {
+  try {
+    const [pendSnap, actSnap, ordSnap] = await Promise.all([
+      db.collection('clienti_b2b').where('stato','==','in_attesa').orderBy('createdAt','desc').get(),
+      db.collection('clienti_b2b').where('stato','==','attivo').orderBy('createdAt','desc').get(),
+      db.collection('ordini_b2b').orderBy('createdAt','desc').get()
+    ]);
+    b2bPendientes = pendSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    b2bActivos = actSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    b2bOrdini = ordSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch(e) { b2bPendientes = []; b2bActivos = []; b2bOrdini = []; }
+  renderB2BPendientes();
+  renderB2BActivos();
+  renderB2BOrdini();
+  updateB2BBadge();
+}
+
+function updateB2BBadge() {
+  const badge = document.getElementById('b2b-badge');
+  if (!badge) return;
+  if (b2bPendientes.length > 0) { badge.textContent = b2bPendientes.length; badge.style.display = 'inline-block'; }
+  else { badge.style.display = 'none'; }
+}
+
+function fmtFechaB2B(ts) { return ts?.toDate ? ts.toDate().toLocaleDateString('it-IT') : '—'; }
+
+function viesBadgeB2B(c) {
+  if (c.viesDisponibile === false) return '<span class="badge badge-gris" style="font-size:10px;">N/D</span>';
+  if (c.viesValido === true) return '<span class="badge badge-verde" style="font-size:10px;">✓ Valida</span>';
+  if (c.viesValido === false) return '<span class="badge badge-rojo" style="font-size:10px;">✗ Non valida</span>';
+  return '<span class="badge badge-gris" style="font-size:10px;">—</span>';
+}
+
+function renderB2BPendientes() {
+  const tbody = document.getElementById('b2b-pendientes-tbody');
+  if (!b2bPendientes.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Nessuna richiesta in attesa</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = b2bPendientes.map(c => `<tr>
+    <td style="font-weight:500">${c.ragioneSociale||'—'}</td>
+    <td style="font-family:monospace">${c.piva||'—'}</td>
+    <td>${c.nome||'—'}</td>
+    <td>${c.email||'—'}</td>
+    <td>${c.telefono||'—'}</td>
+    <td>${viesBadgeB2B(c)}</td>
+    <td style="font-size:13px">${fmtFechaB2B(c.createdAt)}</td>
+    <td><div style="display:flex;gap:6px;">
+      <button class="btn btn-primary btn-sm" onclick="approvaClienteB2B('${c.id}')">✅ Approva</button>
+      <button class="btn btn-danger btn-sm" onclick="rifiutaClienteB2B('${c.id}')">✗ Rifiuta</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+function renderB2BActivos() {
+  const tbody = document.getElementById('b2b-attivi-tbody');
+  if (!b2bActivos.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🏢</div><div class="empty-title">Nessun cliente attivo</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = b2bActivos.map(c => `<tr>
+    <td style="font-weight:500">${c.ragioneSociale||'—'}</td>
+    <td style="font-family:monospace">${c.piva||'—'}</td>
+    <td>${c.email||'—'}</td>
+    <td><code style="background:var(--crema);padding:4px 10px;border-radius:6px;font-weight:700;letter-spacing:1px;">${c.codice||'—'}</code>
+      <button class="btn btn-secondary btn-sm" onclick="copiaTextoB2B('${c.id}')" style="margin-left:6px;">📋 Copia testo</button>
+    </td>
+    <td style="font-size:13px">${fmtFechaB2B(c.attivatoAt||c.createdAt)}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="disattivaClienteB2B('${c.id}')">Disattiva</button></td>
+  </tr>`).join('');
+}
+
+function ordineCheckboxB2B(o, campo, label) {
+  const checked = o[campo] === true;
+  return `<input type="checkbox" ${checked?'checked':''} onchange="toggleOrdineFlagB2B('${o.id}','${campo}',this.checked)" title="${label}" style="width:18px;height:18px;cursor:pointer;">`;
+}
+
+function renderB2BOrdini() {
+  const tbody = document.getElementById('b2b-ordini-tbody');
+  if (!b2bOrdini.length) {
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">Nessun ordine tapas ricevuto</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = b2bOrdini.map(o => `<tr>
+    <td style="font-size:13px">${fmtFechaB2B(o.createdAt)}</td>
+    <td style="font-weight:500">${o.ragioneSociale||'—'}</td>
+    <td style="font-family:monospace">${o.piva||'—'}</td>
+    <td>${o.totaleScatole||0}</td>
+    <td>${o.totaleTapas||0}</td>
+    <td style="font-weight:600">€ ${parseFloat(o.totale||0).toFixed(2)}</td>
+    <td style="text-align:center">${ordineCheckboxB2B(o,'spedito','Spedito')}</td>
+    <td style="text-align:center">${ordineCheckboxB2B(o,'fatturato','Fatturato')}</td>
+    <td style="text-align:center">${ordineCheckboxB2B(o,'pagato','Pagato')}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="eliminaOrdineB2B('${o.id}')">🗑️</button></td>
+  </tr>`).join('');
+}
+
+function generaCodiceB2B() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let c = 'DS';
+  for (let i=0; i<4; i++) c += chars[Math.floor(Math.random()*chars.length)];
+  return c;
+}
+
+window.approvaClienteB2B = async function(id) {
+  try {
+    const codice = generaCodiceB2B();
+    await db.collection('clienti_b2b').doc(id).update({ stato:'attivo', codice, attivatoAt: firebase.firestore.Timestamp.now() });
+    showToast(`Cliente approvato — codice ${codice} ✓`);
+    await loadB2B();
+  } catch(e) { showToast('Errore approvazione', true); }
+};
+
+window.rifiutaClienteB2B = async function(id) {
+  if (!confirm('Rifiutare questa richiesta?')) return;
+  try {
+    await db.collection('clienti_b2b').doc(id).update({ stato:'rifiutato' });
+    showToast('Richiesta rifiutata');
+    await loadB2B();
+  } catch(e) { showToast('Errore', true); }
+};
+
+window.disattivaClienteB2B = async function(id) {
+  if (!confirm('Disattivare questo cliente? Non potrà più accedere al listino.')) return;
+  try {
+    await db.collection('clienti_b2b').doc(id).update({ stato:'disattivato' });
+    showToast('Cliente disattivato');
+    await loadB2B();
+  } catch(e) { showToast('Errore', true); }
+};
+
+window.copiaTextoB2B = function(id) {
+  const c = b2bActivos.find(x => x.id === id);
+  if (!c) return;
+  const testo = `Ciao! Il tuo codice di accesso al listino tapas Don Salo è: ${c.codice}\nAccedi qui per vedere i prezzi e fare l'ordine: https://don-salo-tienda.vercel.app/tapas-ristorazione.html`;
+  navigator.clipboard.writeText(testo)
+    .then(() => showToast('Testo copiato — pronto per WhatsApp 📋'))
+    .catch(() => showToast('Errore copia testo', true));
+};
+
+window.toggleOrdineFlagB2B = async function(id, campo, valore) {
+  try {
+    await db.collection('ordini_b2b').doc(id).update({ [campo]: valore });
+    const o = b2bOrdini.find(x => x.id === id);
+    if (o) o[campo] = valore;
+    showToast(`${campo.charAt(0).toUpperCase()+campo.slice(1)} aggiornato ✓`);
+  } catch(e) { showToast('Errore aggiornamento', true); }
+};
+
+window.eliminaOrdineB2B = async function(id) {
+  if (!confirm("Eliminare questo ordine? L'azione non è reversibile.")) return;
+  try {
+    await db.collection('ordini_b2b').doc(id).delete();
+    showToast('Ordine eliminato');
+    await loadB2B();
+  } catch(e) { showToast('Errore eliminazione', true); }
+};
 
 // ===== NAVIGATION =====
 window.showPage = function(page) {

@@ -1873,16 +1873,28 @@ function updateStats() {
 let b2bPendientes = [], b2bActivos = [], b2bOrdini = [];
 
 async function loadB2B() {
-  try {
-    const [pendSnap, actSnap, ordSnap] = await Promise.all([
-      db.collection('clienti_b2b').where('stato','==','in_attesa').orderBy('createdAt','desc').get(),
-      db.collection('clienti_b2b').where('stato','==','attivo').orderBy('createdAt','desc').get(),
-      db.collection('ordini_b2b').orderBy('createdAt','desc').get()
-    ]);
-    b2bPendientes = pendSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    b2bActivos = actSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    b2bOrdini = ordSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  } catch(e) { b2bPendientes = []; b2bActivos = []; b2bOrdini = []; }
+  const [clientesRes, ordRes] = await Promise.allSettled([
+    db.collection('clienti_b2b').get(),
+    db.collection('ordini_b2b').orderBy('createdAt','desc').get()
+  ]);
+
+  if (clientesRes.status === 'fulfilled') {
+    const clientes = clientesRes.value.docs.map(d => ({ id: d.id, ...d.data() }));
+    const byDateDesc = (a,b) => (b.createdAt?.toMillis()||0) - (a.createdAt?.toMillis()||0);
+    b2bPendientes = clientes.filter(c => c.stato === 'in_attesa').sort(byDateDesc);
+    b2bActivos = clientes.filter(c => c.stato === 'attivo').sort(byDateDesc);
+  } else {
+    console.error('loadB2B: errore lettura clienti_b2b', clientesRes.reason);
+    b2bPendientes = []; b2bActivos = [];
+  }
+
+  if (ordRes.status === 'fulfilled') {
+    b2bOrdini = ordRes.value.docs.map(d => ({ id: d.id, ...d.data() }));
+  } else {
+    console.error('loadB2B: errore lettura ordini_b2b', ordRes.reason);
+    b2bOrdini = [];
+  }
+
   renderB2BPendientes();
   renderB2BActivos();
   renderB2BOrdini();

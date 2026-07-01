@@ -1519,7 +1519,12 @@ function renderPedidos() {
           ${['nuevo','procesando','listo','entregado','cancelado'].map(s=>`<option value="${s}" ${p.estado===s?'selected':''}>${{nuevo:'Nuevo',procesando:'En proceso',listo:'Listo',entregado:'Entregado',cancelado:'Cancelado'}[s]}</option>`).join('')}
         </select>
       </td>
-      <td><button class="btn btn-secondary btn-sm" onclick="verPedido('${p.id}')">Ver</button></td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-secondary btn-sm" onclick="verPedido('${p.id}')">Ver</button>
+          ${p.estado!=='cancelado' ? `<button class="btn btn-danger btn-sm" onclick="cancelarPedidoBtn('${p.id}')">Cancelar</button>` : ''}
+        </div>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -1589,6 +1594,14 @@ window.updatePedidoEstado = async function(id, estado) {
     if (idx >= 0) pedidos[idx].estado = estado;
     updateStats();
   } catch(e) { showToast('Errore aggiornamento', true); }
+};
+
+window.cancelarPedidoBtn = async function(id) {
+  const p = pedidos.find(x => x.id === id);
+  if (!confirm(`¿Cancelar el pedido de ${p?.clienteNombre || 'este cliente'}? Se liberará el stock reservado.`)) return;
+  await updatePedidoEstado(id, 'cancelado');
+  renderPedidos();
+  renderDashboardPedidos();
 };
 
 window.verPedido = function(id) {
